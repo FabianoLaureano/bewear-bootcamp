@@ -87,7 +87,9 @@ const Addresses = ({
       await updateCartShippingAddressMutation.mutateAsync({
         shippingAddressId: newAddress.id,
       });
-      toast.success("Endereço vinculado ao carrinho!");
+      toast.success("Endereço vinculado ao carrinho!", {
+        position: "top-center",
+      });
     } catch (error) {
       toast.error("Erro ao criar endereço. Tente novamente.");
       console.error(error);
