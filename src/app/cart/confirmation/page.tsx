@@ -77,7 +77,7 @@ const ConfirmationPage = async () => {
         />
       </div>
 
-      <div className="mt-20">
+      <div className="mt-42">
         <Footer />
       </div>
     </div>

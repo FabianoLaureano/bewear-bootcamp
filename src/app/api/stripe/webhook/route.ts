@@ -27,6 +27,8 @@ export const POST = async (request: Request) => {
     if (!orderId) {
       return NextResponse.error();
     }
+    console.log("teste");
+    console.log(orderId);
     await db
       .update(orderTable)
       .set({
