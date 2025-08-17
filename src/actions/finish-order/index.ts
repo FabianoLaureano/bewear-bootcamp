@@ -1,16 +1,10 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-//import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 
 import { db } from "@/db";
-import {
-  cartItemTable,
-  cartTable,
-  orderItemTable,
-  orderTable,
-} from "@/db/schema";
+import { cartTable, orderItemTable, orderTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
 export const finishOrder = async () => {
@@ -44,6 +38,7 @@ export const finishOrder = async () => {
   );
 
   let orderId: string | undefined;
+  let cartId: string | undefined;
 
   await db.transaction(async (tx) => {
     if (!cart.shippingAddress) {
@@ -73,6 +68,7 @@ export const finishOrder = async () => {
       throw new Error("Failed to create order");
     }
     orderId = order.id;
+    cartId = cart.id;
     const orderItemsPayload: Array<typeof orderItemTable.$inferInsert> =
       cart.items.map((item) => ({
         orderId: order.id,
@@ -81,11 +77,9 @@ export const finishOrder = async () => {
         priceInCents: item.productVariant.priceInCents,
       }));
     await tx.insert(orderItemTable).values(orderItemsPayload);
-    await tx.delete(cartTable).where(eq(cartTable.id, cart.id));
-    await tx.delete(cartItemTable).where(eq(cartItemTable.cartId, cart.id));
   });
-  if (!orderId) {
+  if (!orderId || !cartId) {
     throw new Error("Failed to create order");
   }
-  return { orderId };
+  return { orderId, cartId };
 };

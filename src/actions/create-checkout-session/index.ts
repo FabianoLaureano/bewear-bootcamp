@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import Stripe from "stripe";
 
 import { db } from "@/db";
-import { orderItemTable, orderTable } from "@/db/schema";
+import { orderItemTable, orderTable, cartTable } from "@/db/schema";
 import { auth } from "@/lib/auth";
 
 import {
@@ -25,16 +25,22 @@ export const createCheckoutSession = async (
   if (!session?.user) {
     throw new Error("Unauthorized");
   }
-  const { orderId } = createCheckoutSessionSchema.parse(data);
+  const { orderId, cartId } = createCheckoutSessionSchema.parse(data);
   const order = await db.query.orderTable.findFirst({
     where: eq(orderTable.id, orderId),
   });
-  if (!order) {
+
+  const cart = await db.query.cartTable.findFirst({
+    where: eq(cartTable.id, cartId),
+  });
+
+  if (!order || !cart) {
     throw new Error("Order not found");
   }
-  if (order.userId !== session.user.id) {
+  if (order.userId !== session.user.id || cart.userId !== session.user.id) {
     throw new Error("Unauthorized");
   }
+
   const orderItems = await db.query.orderItemTable.findMany({
     where: eq(orderItemTable.orderId, orderId),
     with: {
@@ -49,6 +55,7 @@ export const createCheckoutSession = async (
     cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/cancel`,
     metadata: {
       orderId,
+      cartId
     },
     line_items: orderItems.map((orderItem) => {
       return {

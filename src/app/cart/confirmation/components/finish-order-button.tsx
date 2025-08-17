@@ -24,9 +24,10 @@ const FinishOrderButton = () => {
     if (!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
       throw new Error("Stripe publishable key is not set");
     }
-    const { orderId } = await finishOrderMutation.mutateAsync();
+    const { orderId, cartId } = await finishOrderMutation.mutateAsync();
     const checkoutSession = await createCheckoutSession({
       orderId,
+      cartId,
     });
     const stripe = await loadStripe(
       process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,

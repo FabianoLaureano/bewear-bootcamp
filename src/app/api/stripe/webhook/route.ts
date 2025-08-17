@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
 import { db } from "@/db";
-import { orderTable } from "@/db/schema";
+import { orderTable, cartTable, cartItemTable } from "@/db/schema";
 
 export const POST = async (request: Request) => {
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
@@ -24,17 +24,23 @@ export const POST = async (request: Request) => {
     console.log("Checkout session completed");
     const session = event.data.object as Stripe.Checkout.Session;
     const orderId = session.metadata?.orderId;
-    if (!orderId) {
+    const cartId = session.metadata?.cartId;
+    console.log(cartId);
+    if (!orderId || !cartId) {
       return NextResponse.error();
     }
-    console.log("teste");
-    console.log(orderId);
+
     await db
       .update(orderTable)
       .set({
         status: "paid",
       })
       .where(eq(orderTable.id, orderId));
+
+    await db.transaction(async (tx) => {
+      await tx.delete(cartTable).where(eq(cartTable.id, cartId));
+      await tx.delete(cartItemTable).where(eq(cartItemTable.cartId, cartId));
+    });
   }
   return NextResponse.json({ received: true });
 };
