@@ -26,11 +26,11 @@ const ProductItem = ({ product, textContainerClassName }: ProductItemProps) => {
         sizes="100vw"
         width={0}
         height={0}
-        className="h-auto w-full rounded-3xl"
+        className="h-auto w-full rounded-3xl lg:px-5"
       />
       <div
         className={cn(
-          "flex max-w-[200px] flex-col gap-1",
+          "flex max-w-[200px] flex-col gap-1 lg:px-5",
           textContainerClassName,
         )}
       >
