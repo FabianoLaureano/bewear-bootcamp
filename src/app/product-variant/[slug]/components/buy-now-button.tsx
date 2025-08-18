@@ -6,29 +6,28 @@ import { useRouter } from "next/navigation";
 
 import { addProductToCart } from "@/actions/add-cart-product";
 import { Button } from "@/components/ui/button";
+import { getUseCartQueryKey } from "@/hooks/queries/use-cart";
 import { authClient } from "@/lib/auth-client";
 
-interface AddToCartButtonProps {
+interface BuyNowButtonProps {
   productVariantId: string;
   quantity: number;
 }
 
-const AddToCartButton = ({
-  productVariantId,
-  quantity,
-}: AddToCartButtonProps) => {
+const BuyNowButton = ({ productVariantId, quantity }: BuyNowButtonProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: session } = authClient.useSession();
   const { mutate, isPending } = useMutation({
-    mutationKey: ["addProductToCart", productVariantId, quantity],
+    mutationKey: ["buyNow", productVariantId, quantity],
     mutationFn: () =>
       addProductToCart({
         productVariantId,
         quantity,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      queryClient.invalidateQueries({ queryKey: getUseCartQueryKey() });
+      router.push("/cart/identification");
     },
   });
 
@@ -38,18 +37,18 @@ const AddToCartButton = ({
     }
     mutate();
   }
+
   return (
     <Button
-      className="rounded-full"
+      className="cursor-pointer rounded-full"
       size="lg"
-      variant="outline"
       disabled={isPending}
       onClick={handleBuyNow}
     >
       {isPending && <Loader2 className="animate-spin" />}
-      Adicionar à sacola
+      Comprar agora
     </Button>
   );
 };
 
-export default AddToCartButton;
+export default BuyNowButton;
